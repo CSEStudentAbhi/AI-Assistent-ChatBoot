@@ -1,0 +1,387 @@
+{
+	"info": {
+		"_postman_id": "portfolio-chatbot-api-v2",
+		"name": "Portfolio Chatbot API v2.0 (with Authentication)",
+		"description": "REST API for Abhishek Ambi's Portfolio Chatbot with API key authentication - Test all endpoints with Postman",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Generate API Key",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test API Key\",\n    \"description\": \"API key for testing the portfolio chatbot\",\n    \"expires_in_days\": 365,\n    \"permissions\": [\"chat\", \"projects\", \"skills\", \"recommendations\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/generate-key",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"generate-key"
+							]
+						},
+						"description": "Generate a new API key for authentication"
+					},
+					"response": []
+				},
+				{
+					"name": "List API Keys",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/auth/keys",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"keys"
+							]
+						},
+						"description": "List all API keys and their statistics"
+					},
+					"response": []
+				},
+				{
+					"name": "Revoke API Key",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"api_key\": \"your_api_key_to_revoke_here\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/revoke-key",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"revoke-key"
+							]
+						},
+						"description": "Revoke an existing API key"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Public Endpoints",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check if the API is running and chatbot is available (no authentication required)"
+					},
+					"response": []
+				},
+				{
+					"name": "API Documentation",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "Get API documentation and available endpoints (no authentication required)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chatbot Endpoints (Require API Key)",
+			"item": [
+				{
+					"name": "Chat - Ask Question",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{api_key}}",
+								"description": "Your API key for authentication"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"What are my strongest technical skills?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chat",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chat"
+							]
+						},
+						"description": "Send a message to the chatbot and get a response (requires 'chat' permission)"
+					},
+					"response": []
+				},
+				{
+					"name": "Chat - Project Question",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{api_key}}",
+								"description": "Your API key for authentication"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Tell me about the Shri Vagdevi Construction project\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chat",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chat"
+							]
+						},
+						"description": "Ask about a specific project (requires 'chat' permission)"
+					},
+					"response": []
+				},
+				{
+					"name": "Chat - Career Advice",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{api_key}}",
+								"description": "Your API key for authentication"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Which technologies should I focus on for career growth?\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/chat",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"chat"
+							]
+						},
+						"description": "Get career advice from the chatbot (requires 'chat' permission)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Projects",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{api_key}}",
+								"description": "Your API key for authentication"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects"
+							]
+						},
+						"description": "Get a list of all projects with their technologies (requires 'projects' permission)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project Info - Shri Vagdevi Construction",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{api_key}}",
+								"description": "Your API key for authentication"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/Shri%20Vagdevi%20Construction",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"Shri Vagdevi Construction"
+							]
+						},
+						"description": "Get detailed information about a specific project (requires 'projects' permission)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project Info - Quick Eats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{api_key}}",
+								"description": "Your API key for authentication"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/projects/Quick%20Eats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"Quick Eats"
+							]
+						},
+						"description": "Get detailed information about Quick Eats project (requires 'projects' permission)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Skills Summary",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{api_key}}",
+								"description": "Your API key for authentication"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/skills",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"skills"
+							]
+						},
+						"description": "Get a summary of technical skills (requires 'skills' permission)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Career Recommendations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{api_key}}",
+								"description": "Your API key for authentication"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/recommendations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"recommendations"
+							]
+						},
+						"description": "Get career and technology recommendations (requires 'recommendations' permission)"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "api_key",
+			"value": "your_api_key_here",
+			"type": "string",
+			"description": "Replace with your actual API key"
+		}
+	]
+} 

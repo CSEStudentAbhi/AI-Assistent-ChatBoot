@@ -1,0 +1,19 @@
+{
+  "6dd157ce78b16edd42d4cb9e8e25ee439caa131cda616ae99054a0eee293c452": {
+    "key_id": "2745316f875fd9d92c3791c778e9916a",
+    "key_hash": "6dd157ce78b16edd42d4cb9e8e25ee439caa131cda616ae99054a0eee293c452",
+    "name": "Default API Key",
+    "description": "Default API key for Abhishek Ambi's Portfolio Chatbot",
+    "created_at": "2025-08-06T12:04:47.192249",
+    "expires_at": "2026-08-06T12:04:47.192301",
+    "is_active": true,
+    "permissions": [
+      "chat",
+      "projects",
+      "skills",
+      "recommendations"
+    ],
+    "usage_count": 0,
+    "last_used": null
+  }
+}

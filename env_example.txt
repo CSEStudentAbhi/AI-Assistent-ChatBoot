@@ -1,0 +1,5 @@
+# Groq API Key - Get yours from https://console.groq.com/
+GROQ_API_KEY=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
+
+# Optional: Set debug mode (true/false)
+DEBUG_MODE=false 
