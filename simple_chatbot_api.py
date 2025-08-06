@@ -29,7 +29,7 @@ except Exception as e:
 def home():
     """Home endpoint with simple API documentation."""
     return jsonify({
-        "message": "Abhishek Ambi's Simple Portfolio Chatbot API",
+        "message": "Abhishek Ambi's AI Assistant Chatbot API",
         "version": "1.0.0",
         "status": "running",
         "chatbot_available": chatbot_available,
