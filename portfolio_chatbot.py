@@ -80,6 +80,22 @@ knowledge_prompt:
 PERSONAL BACKGROUND:
 Abhishek Gangappa Ambi is a final year computer science student with practical experience in software development, data analysis, machine learning and computer vision through academic projects. He is passionate about creating innovative digital solutions and combines technical expertise with creative problem-solving to deliver exceptional user experiences.
 
+**Personal Journey**:
+- Born and raised in Mahalingpur, Karnataka
+- Started educational journey at Jaycee English Medium School
+- Completed SSLC in 2020 with 64% marks
+- Pursued Diploma in Computer Science (2020-2023) with excellent performance (9.83 CGPA)
+- Currently pursuing BE in Computer Science with strong academic record (8.26 CGPA)
+- Passionate about technology and continuous learning
+
+**Personal Traits**:
+- Dedicated and hardworking individual
+- Strong problem-solving mindset
+- Enjoys learning new technologies
+- Team player with good communication skills
+- Detail-oriented and quality-focused
+- Self-motivated and goal-driven
+
 EDUCATION:
 1. RV INSTITUTE OF TECHNOLOGY AND MANAGEMENT BENGALURU
    - BE in Computer Science & Engineering
@@ -91,10 +107,28 @@ EDUCATION:
    - CGPA: 9.83
    - Duration: 2020 - 2023
 
+3. JAYCEE ENGLISH MEDIUM SCHOOL MAHALINGPUR
+   - SSLC (10th Standard)
+   - Percentage: 64%
+   - Passout Year: 2020
+   - Location: Mahalingpur, Karnataka
+
 CERTIFICATIONS & ACTIVITIES:
 - Continuous learning through online courses and certifications
 - Active participation in coding communities and hackathons
 - Academic projects in machine learning and computer vision
+
+PERSONAL INTERESTS & HOBBIES:
+- **Coding & Programming**: Passionate about writing code, solving problems, and building applications
+- **Reading**: Enjoys reading technical books, programming documentation, and educational content
+- **Testing & Quality Assurance**: Interested in software testing, debugging, and ensuring code quality
+- **Learning New Technologies**: Constantly exploring new programming languages, frameworks, and tools
+- **Problem Solving**: Enjoys tackling complex technical challenges and finding innovative solutions
+- **Open Source Contribution**: Interested in contributing to open-source projects and developer communities
+- **Technical Writing**: Creating documentation, tutorials, and sharing knowledge with others
+- **Algorithm Practice**: Regular practice of data structures and algorithms for skill improvement
+- **Project Building**: Creating personal projects to apply and showcase technical skills
+- **Networking**: Connecting with fellow developers and tech professionals
 
 PROFESSIONAL EXPERIENCE:
 - Full-stack development with focus on MERN stack

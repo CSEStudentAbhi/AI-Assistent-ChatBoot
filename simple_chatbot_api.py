@@ -10,6 +10,13 @@ from portfolio_chatbot import PortfolioChatbot
 import os
 from dotenv import load_dotenv
 import re
+import threading
+import time
+import requests
+import json
+from datetime import datetime
+import signal
+import sys
 
 # Load environment variables
 load_dotenv()
@@ -30,6 +37,13 @@ class FallbackChatbot:
 • **Specializations**: Software development, data analysis, machine learning, computer vision
 • **Career Goal**: Seeking forward-thinking organization supporting innovation and mentorship
 
+**Personal Journey**:
+• Born and raised in Mahalingpur, Karnataka
+• Started educational journey at Jaycee English Medium School
+• Completed SSLC in 2020 with 64% marks
+• Pursued Diploma in Computer Science (2020-2023) with excellent performance (9.83 CGPA)
+• Currently pursuing BE in Computer Science with strong academic record (8.26 CGPA)
+
 **Education Details**:
 1. **RV INSTITUTE OF TECHNOLOGY AND MANAGEMENT BENGALURU**
    • Degree: BE in Computer Science & Engineering
@@ -40,6 +54,20 @@ class FallbackChatbot:
    • Degree: Diploma in Computer Science & Engineering
    • CGPA: 9.83
    • Duration: 2020 - 2023
+
+3. **JAYCEE ENGLISH MEDIUM SCHOOL MAHALINGPUR**
+   • SSLC (10th Standard)
+   • Percentage: 64%
+   • Passout Year: 2020
+   • Location: Mahalingpur, Karnataka
+
+**Personal Traits**:
+• Dedicated and hardworking individual
+• Strong problem-solving mindset
+• Enjoys learning new technologies
+• Team player with good communication skills
+• Detail-oriented and quality-focused
+• Self-motivated and goal-driven
 
 **Key Interests**:
 • Using code and insights to solve real-world problems
@@ -151,6 +179,38 @@ Each project demonstrates different technical skills and problem-solving abiliti
 3. **Portfolio Review**: Website or LinkedIn
 4. **General Questions**: Any of the above methods"""
             },
+            'hobbies': {
+                'keywords': ['hobby', 'hobbies', 'interest', 'interests', 'personal', 'activities', 'coding', 'reading', 'testing'],
+                'response': """**Abhishek's Personal Interests & Hobbies**
+
+**Primary Hobbies**:
+• **Coding & Programming**: Passionate about writing code, solving problems, and building applications
+• **Reading**: Enjoys reading technical books, programming documentation, and educational content
+• **Testing & Quality Assurance**: Interested in software testing, debugging, and ensuring code quality
+
+**Technical Interests**:
+• **Learning New Technologies**: Constantly exploring new programming languages, frameworks, and tools
+• **Problem Solving**: Enjoys tackling complex technical challenges and finding innovative solutions
+• **Algorithm Practice**: Regular practice of data structures and algorithms for skill improvement
+• **Project Building**: Creating personal projects to apply and showcase technical skills
+
+**Professional Development**:
+• **Open Source Contribution**: Interested in contributing to open-source projects and developer communities
+• **Technical Writing**: Creating documentation, tutorials, and sharing knowledge with others
+• **Networking**: Connecting with fellow developers and tech professionals
+
+**Personal Development**:
+• Continuous learning and skill enhancement
+• Staying updated with latest technology trends
+• Building a strong professional network
+• Contributing to the developer community
+
+**Why These Hobbies Matter**:
+• Coding and testing skills directly enhance technical capabilities
+• Reading keeps knowledge current and broadens perspectives
+• Problem-solving practice improves analytical thinking
+• Networking helps in career growth and opportunities"""
+            },
             'career': {
                 'keywords': ['career', 'advice', 'job', 'work', 'experience', 'future'],
                 'response': """**Career Opportunities & Advice**
@@ -165,6 +225,7 @@ Each project demonstrates different technical skills and problem-solving abiliti
 **Academic Strengths**:
 • **BE CGPA**: 8.26 (Excellent academic performance)
 • **Diploma CGPA**: 9.83 (Outstanding foundation)
+• **SSLC**: 64% from Jaycee English Medium School, Mahalingpur (2020)
 • **Project Portfolio**: 9 diverse applications
 • **Technical Breadth**: Full-stack to ML/AI
 
@@ -192,22 +253,24 @@ Each project demonstrates different technical skills and problem-solving abiliti
 **I can help you learn about**:
 • Abhishek's background and education
 • His projects and technical skills
+• Personal interests and hobbies
 • Career advice and opportunities
 • How to contact him
 
 **Available Information Categories**:
-1. **Personal Background** - Education, experience, goals
+1. **Personal Background** - Education, experience, goals, personal journey
 2. **Project Portfolio** - 9 diverse applications
 3. **Technical Skills** - Programming, frameworks, tools
-4. **Contact Information** - Professional networking
-5. **Career Guidance** - Opportunities and advice
+4. **Personal Interests & Hobbies** - Coding, reading, testing, and more
+5. **Contact Information** - Professional networking
+6. **Career Guidance** - Opportunities and advice
 
 **Response Format**:
 • All responses are organized in bullet points
 • Information is structured with clear headers
 • Unknown topics are handled gracefully with related context
 
-Feel free to ask me anything about Abhishek's portfolio!"""
+Feel free to ask me anything about Abhishek's portfolio, hobbies, or career!"""
             }
         }
     
@@ -343,6 +406,13 @@ except Exception as e:
 # Initialize fallback chatbot
 fallback_chatbot = FallbackChatbot()
 
+# Global variables for auto-restart and periodic requests
+auto_restart_enabled = True
+periodic_requests_enabled = True
+restart_interval = 180  # 3 minutes in seconds
+last_restart_time = time.time()
+server_start_time = time.time()
+
 @app.route('/')
 def home():
     """Home endpoint with simple API documentation."""
@@ -418,11 +488,90 @@ def health_check():
     
     GET /health
     """
+    current_time = time.time()
+    uptime = current_time - server_start_time
+    
     return jsonify({
         'status': 'healthy',
         'chatbot_available': chatbot_available,
-        'api_version': '1.0.0'
+        'api_version': '1.0.0',
+        'uptime_seconds': int(uptime),
+        'auto_restart_enabled': auto_restart_enabled,
+        'periodic_requests_enabled': periodic_requests_enabled,
+        'next_restart_in_seconds': max(0, restart_interval - (current_time - last_restart_time))
     })
+
+@app.route('/auto-restart/status', methods=['GET'])
+def auto_restart_status():
+    """Get auto-restart and periodic request status."""
+    current_time = time.time()
+    uptime = current_time - server_start_time
+    
+    return jsonify({
+        'auto_restart_enabled': auto_restart_enabled,
+        'periodic_requests_enabled': periodic_requests_enabled,
+        'restart_interval_seconds': restart_interval,
+        'server_uptime_seconds': int(uptime),
+        'last_restart_time': datetime.fromtimestamp(last_restart_time).isoformat(),
+        'next_restart_in_seconds': max(0, restart_interval - (current_time - last_restart_time))
+    })
+
+@app.route('/auto-restart/toggle', methods=['POST'])
+def toggle_auto_restart():
+    """Toggle auto-restart functionality."""
+    global auto_restart_enabled, periodic_requests_enabled
+    
+    data = request.get_json() or {}
+    auto_restart = data.get('auto_restart', None)
+    periodic_requests = data.get('periodic_requests', None)
+    
+    if auto_restart is not None:
+        auto_restart_enabled = bool(auto_restart)
+    
+    if periodic_requests is not None:
+        periodic_requests_enabled = bool(periodic_requests)
+    
+    return jsonify({
+        'auto_restart_enabled': auto_restart_enabled,
+        'periodic_requests_enabled': periodic_requests_enabled,
+        'message': 'Settings updated successfully'
+    })
+
+@app.route('/auto-restart/trigger', methods=['POST'])
+def trigger_restart():
+    """Manually trigger a server restart."""
+    global last_restart_time, server_start_time, chatbot, chatbot_available
+    
+    try:
+        current_time = time.time()
+        print(f"🔄 Manual restart triggered at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Update restart time and server start time
+        last_restart_time = current_time
+        server_start_time = current_time
+        
+        # Reinitialize chatbot
+        try:
+            chatbot = PortfolioChatbot(debug=False)
+            chatbot_available = True
+            print("✅ Chatbot reinitialized successfully!")
+        except Exception as e:
+            print(f"❌ Failed to reinitialize chatbot: {e}")
+            chatbot_available = False
+            print("🔄 Using fallback response system...")
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Server restarted successfully',
+            'restart_time': datetime.fromtimestamp(current_time).isoformat(),
+            'chatbot_available': chatbot_available
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'Restart failed: {str(e)}'
+        }), 500
 
 @app.errorhandler(404)
 def not_found(error):
@@ -445,10 +594,130 @@ def method_not_allowed(error):
         'status': 'error'
     }), 405
 
+def send_periodic_request():
+    """Send a periodic POST request to /ask endpoint every 3 minutes."""
+    while periodic_requests_enabled:
+        try:
+            # Wait for 3 minutes
+            time.sleep(restart_interval)
+            
+            if not periodic_requests_enabled:
+                break
+                
+            # Send a test request to keep the server active
+            test_questions = [
+                "What are your technical skills?",
+                "Tell me about your projects",
+                "What is your background?",
+                "How can I contact you?",
+                "Give me career advice"
+            ]
+            
+            # Rotate through different questions
+            current_time = int(time.time())
+            question_index = (current_time // restart_interval) % len(test_questions)
+            test_question = test_questions[question_index]
+            
+            # Send request to self
+            response = requests.post(
+                'https://ai-assistent-chatboot.onrender.com/ask',
+                json={'question': test_question},
+                headers={'Content-Type': 'application/json'},
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                print(f"✅ Periodic request sent successfully at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                print(f"   Question: {test_question}")
+                print(f"   Status: {response.json().get('status', 'unknown')}")
+            else:
+                print(f"❌ Periodic request failed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                print(f"   Status Code: {response.status_code}")
+                
+        except Exception as e:
+            print(f"❌ Error in periodic request at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: {str(e)}")
+
+def auto_restart_monitor():
+    """Monitor server uptime and trigger restart every 3 minutes."""
+    global last_restart_time, server_start_time
+    
+    while auto_restart_enabled:
+        try:
+            current_time = time.time()
+            time_since_last_restart = current_time - last_restart_time
+            
+            # Check if it's time to restart (every 3 minutes)
+            if time_since_last_restart >= restart_interval:
+                print(f"🔄 Auto-restart triggered at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                print(f"   Server uptime: {int(time_since_last_restart)} seconds")
+                
+                # Update restart time and server start time
+                last_restart_time = current_time
+                server_start_time = current_time
+                
+                # Trigger restart by restarting the Flask app
+                print("🔄 Restarting server...")
+                
+                # Reinitialize chatbot if needed
+                global chatbot, chatbot_available
+                try:
+                    chatbot = PortfolioChatbot(debug=False)
+                    chatbot_available = True
+                    print("✅ Chatbot reinitialized successfully!")
+                except Exception as e:
+                    print(f"❌ Failed to reinitialize chatbot: {e}")
+                    chatbot_available = False
+                    print("🔄 Using fallback response system...")
+                
+                print("✅ Server restarted successfully!")
+                
+            # Sleep for 10 seconds before checking again
+            time.sleep(10)
+            
+        except Exception as e:
+            print(f"❌ Error in auto-restart monitor: {str(e)}")
+            time.sleep(10)
+
+def signal_handler(signum, frame):
+    """Handle shutdown signals gracefully."""
+    print(f"\n🛑 Received signal {signum}, shutting down gracefully...")
+    global auto_restart_enabled, periodic_requests_enabled
+    
+    # Disable auto-restart and periodic requests
+    auto_restart_enabled = False
+    periodic_requests_enabled = False
+    
+    print("✅ Graceful shutdown completed")
+    sys.exit(0)
+
+def start_background_threads():
+    """Start background threads for auto-restart and periodic requests."""
+    if auto_restart_enabled:
+        restart_thread = threading.Thread(target=auto_restart_monitor, daemon=True)
+        restart_thread.start()
+        print("🔄 Auto-restart monitor started (every 3 minutes)")
+    
+    if periodic_requests_enabled:
+        periodic_thread = threading.Thread(target=send_periodic_request, daemon=True)
+        periodic_thread.start()
+        print("📡 Periodic request sender started (every 3 minutes)")
+    
+    print("✅ Background threads initialized")
+
 if __name__ == '__main__':
     print("🚀 Starting Simple Portfolio Chatbot API...")
-    print("📱 API will be available at: http://localhost:5000")
+    print("📱 API will be available at: https://ai-assistent-chatboot.onrender.com")
     print("❓ Send POST requests to /ask with your questions")
+    print("🔄 Auto-restart enabled (every 3 minutes)")
+    print("📡 Periodic requests enabled (every 3 minutes)")
     print("🛑 Press Ctrl+C to stop the server")
     
+    # Set up signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
+    # Start background threads
+    start_background_threads()
+    
+    # Start the Flask application
     app.run(debug=True, host='0.0.0.0', port=5000) 
