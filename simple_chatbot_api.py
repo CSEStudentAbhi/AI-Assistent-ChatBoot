@@ -409,7 +409,7 @@ fallback_chatbot = FallbackChatbot()
 # Global variables for auto-restart and periodic requests
 auto_restart_enabled = True
 periodic_requests_enabled = True
-restart_interval = 180  # 3 minutes in seconds
+restart_interval = 360  # 3 minutes in seconds
 last_restart_time = time.time()
 server_start_time = time.time()
 
@@ -720,4 +720,5 @@ if __name__ == '__main__':
     start_background_threads()
     
     # Start the Flask application
+
     app.run(debug=True, host='0.0.0.0', port=5000) 
