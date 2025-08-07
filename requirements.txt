@@ -14,12 +14,6 @@ langchain-groq
 # HTTP Requests (for periodic requests and monitoring)
 requests==2.31.0
 
-# Production Server
-gunicorn==21.2.0
-
-# Development and Testing (Optional)
-pytest==7.4.3
-pytest-flask==1.3.0
 
 # Additional Utilities
 typing-extensions==4.8.0
