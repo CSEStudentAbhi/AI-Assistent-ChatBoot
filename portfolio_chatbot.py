@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 from langchain_core.prompts import PromptTemplate
@@ -29,8 +30,13 @@ class PortfolioChatbot:
         if not self.api_key:
             raise ValueError("API key not found. Please set GROQ_API_KEY environment variable or pass it directly.")
         
-        self.model = model
+        self.original_model = model
+        self.current_model = model
         self.llm = ChatGroq(model=model, api_key=self.api_key)
+        
+        # Model switching variables
+        self.model_switch_time = None
+        self.switch_duration = 1800  # 30 minutes in seconds
         
         # Set debug mode if requested
         if debug:
@@ -292,6 +298,26 @@ User Query: "{user_input}"
 Answer:
 '''
     
+    def _switch_model(self, new_model: str):
+        """Switch to a different model."""
+        try:
+            self.current_model = new_model
+            self.llm = ChatGroq(model=new_model, api_key=self.api_key)
+            self._setup_chain()
+            print(f"🔄 Switched to model: {new_model}")
+        except Exception as e:
+            print(f"❌ Error switching model: {e}")
+    
+    def _check_and_switch_back(self):
+        """Check if it's time to switch back to the original model."""
+        if (self.model_switch_time and 
+            time.time() - self.model_switch_time >= self.switch_duration and
+            self.current_model != self.original_model):
+            
+            self._switch_model(self.original_model)
+            self.model_switch_time = None
+            print(f"🔄 Switched back to original model: {self.original_model}")
+    
     def ask(self, question: str) -> str:
         """
         Ask a question to the portfolio chatbot.
@@ -302,76 +328,32 @@ Answer:
         Returns:
             The AI assistant's response
         """
+        # Check if we need to switch back to original model
+        self._check_and_switch_back()
+        
         try:
             result = self.chain.run({"user_input": question})
             return result.strip()
         except Exception as e:
             error_str = str(e).lower()
             
-            # Handle rate limit errors gracefully
+            # Handle rate limit errors by switching model
             if 'rate limit' in error_str or '429' in error_str or 'tpd' in error_str:
-                return """**Service Temporarily Unavailable**
-
-I'm currently experiencing high demand and need a moment to process your request. 
-
-**What you can do**:
-• Try again in a few minutes
-• Ask me about Abhishek's background, projects, or skills
-• Check back later when the service is less busy
-
-**Available Information** (even during high traffic):
-• Abhishek's educational background and achievements
-• His 9 diverse projects in web, mobile, and ML/AI
-• Technical skills and programming languages
-• Career advice and opportunities
-• Contact information and professional networking
-
-**Quick Facts About Abhishek**:
-• Final year computer science student (8.26 CGPA)
-• 9 projects across web, mobile, and machine learning
-• Expertise in MERN stack, React Native, and Python
-• Passionate about solving real-world problems
-
-Please try again in a moment, or feel free to ask about any of these topics!"""
+                if self.current_model == "gemma2-9b-it":
+                    print("⚠️ Rate limit reached for gemma2-9b-it, switching to compound-beta-mini")
+                    self._switch_model("compound-beta-mini")
+                    self.model_switch_time = time.time()
+                    
+                    # Try the request again with the new model
+                    try:
+                        result = self.chain.run({"user_input": question})
+                        return result.strip()
+                    except Exception as retry_error:
+                        return f"Sorry, I encountered an error even after switching models: {str(retry_error)}"
+                else:
+                    return f"Sorry, I encountered a rate limit error: {str(e)}"
             
-            # Handle other API-related errors
-            elif 'api' in error_str or 'key' in error_str or 'authentication' in error_str:
-                return """**Service Configuration Issue**
-
-I'm having trouble connecting to my knowledge base right now.
-
-**Available Information**:
-• Abhishek's educational background and projects
-• Technical skills and programming expertise
-• Career guidance and opportunities
-• Contact and networking information
-
-**Quick Overview**:
-• Final year CS student with strong academic record
-• 9 diverse projects demonstrating full-stack to ML skills
-• Expertise in React, Node.js, Python, and mobile development
-• Seeking opportunities in forward-thinking organizations
-
-Please try again later or contact Abhishek directly through his portfolio website."""
-            
-            # Handle general errors
-            else:
-                return """**Temporary Service Issue**
-
-I'm experiencing a technical difficulty right now.
-
-**What I can tell you about Abhishek**:
-• Final year computer science student with excellent academic record
-• 9 diverse projects in web, mobile, and machine learning
-• Strong expertise in full-stack development and Python
-• Passionate about innovation and problem-solving
-
-**Contact Information**:
-• Portfolio: https://www.abhishekambi.info/
-• Email: abhishekambi2003@gmail.com
-• LinkedIn: linkedin.com/in/abhishekambi2003
-
-Please try again in a few minutes, or reach out to Abhishek directly for immediate assistance."""
+            return f"Sorry, I encountered an error: {str(e)}"
     
     def get_project_info(self, project_name: str) -> str:
         """
@@ -448,6 +430,42 @@ Please try again in a few minutes, or reach out to Abhishek directly for immedia
             Project recommendations
         """
         return self.ask("Based on my current portfolio, what types of projects should I consider working on next?")
+    
+    def get_model_status(self) -> str:
+        """
+        Get the current model status and switching information.
+        
+        Returns:
+            Current model status information
+        """
+        status = f"Current Model: {self.current_model}\n"
+        status += f"Original Model: {self.original_model}\n"
+        
+        if self.model_switch_time:
+            elapsed = time.time() - self.model_switch_time
+            remaining = self.switch_duration - elapsed
+            if remaining > 0:
+                status += f"Switched {elapsed:.0f}s ago, {remaining:.0f}s remaining before switch back"
+            else:
+                status += "Ready to switch back to original model"
+        else:
+            status += "No model switch in progress"
+        
+        return status
+    
+    def force_switch_back(self) -> str:
+        """
+        Force switch back to the original model.
+        
+        Returns:
+            Status message
+        """
+        if self.current_model != self.original_model:
+            self._switch_model(self.original_model)
+            self.model_switch_time = None
+            return f"✅ Forced switch back to {self.original_model}"
+        else:
+            return f"ℹ️ Already using original model: {self.original_model}"
 
 
 def main():
@@ -466,7 +484,10 @@ def main():
         print("• Give me career advice")
         print("• How can I contact him?")
         print("• What should he work on next?")
-        print("\nType 'quit' to exit\n")
+        print("\n🔧 Special commands:")
+        print("• 'status' - Check current model status")
+        print("• 'switch' - Force switch back to original model")
+        print("• 'quit' - Exit the chatbot\n")
         
         while True:
             user_input = input("You: ").strip()
@@ -474,6 +495,18 @@ def main():
             if user_input.lower() in ['quit', 'exit', 'bye']:
                 print("👋 Goodbye! Thanks for using the portfolio chatbot.")
                 break
+            
+            if user_input.lower() == 'status':
+                print("\n📊 Model Status:")
+                print(chatbot.get_model_status())
+                print("\n" + "-" * 50 + "\n")
+                continue
+            
+            if user_input.lower() == 'switch':
+                print("\n🔄 Model Switch:")
+                print(chatbot.force_switch_back())
+                print("\n" + "-" * 50 + "\n")
+                continue
             
             if not user_input:
                 continue

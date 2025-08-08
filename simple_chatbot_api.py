@@ -636,10 +636,12 @@ def auto_restart_monitor():
             current_time = time.time()
             time_since_last_restart = current_time - last_restart_time
             
-            # Check if it's time to restart (every 14 minutes)
+            # Check if it's time to restart
+            restart_minutes = restart_interval // 60
             if time_since_last_restart >= restart_interval:
                 print(f"🔄 Auto-restart triggered at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                 print(f"   Server uptime: {int(time_since_last_restart)} seconds")
+                print(f"   Restart interval: {restart_interval} seconds ({restart_minutes} minutes)")
                 
                 # Update restart time and server start time
                 last_restart_time = current_time
@@ -685,12 +687,14 @@ def start_background_threads():
     if auto_restart_enabled:
         restart_thread = threading.Thread(target=auto_restart_monitor, daemon=True)
         restart_thread.start()
-        print("🔄 Auto-restart monitor started (every 14 minutes)")
+        restart_minutes = restart_interval // 60
+        print(f"🔄 Auto-restart monitor started (every {restart_minutes} minutes)")
     
     if periodic_requests_enabled:
         periodic_thread = threading.Thread(target=send_periodic_request, daemon=True)
         periodic_thread.start()
-        print("📡 Periodic request sender started (every 18 minutes)")
+        periodic_minutes = periodic_request_interval // 60
+        print(f"📡 Periodic request sender started (every {periodic_minutes} minutes)")
     
     print("✅ Background threads initialized")
 
@@ -698,8 +702,10 @@ if __name__ == '__main__':
     print("🚀 Starting Simple Portfolio Chatbot API...")
     print("📱 API will be available at: https://ai-assistent-chatboot.onrender.com")
     print("❓ Send POST requests to /ask with your questions")
-    print("🔄 Auto-restart enabled (every 14 minutes)")
-    print("📡 Periodic requests enabled (every 18 minutes)")
+    restart_minutes = restart_interval // 60
+    periodic_minutes = periodic_request_interval // 60
+    print(f"🔄 Auto-restart enabled (every {restart_minutes} minutes)")
+    print(f"📡 Periodic requests enabled (every {periodic_minutes} minutes)")
     print("🛑 Press Ctrl+C to stop the server")
     
     # Set up signal handlers for graceful shutdown
