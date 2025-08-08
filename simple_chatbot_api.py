@@ -608,24 +608,72 @@ def send_periodic_request():
             # Send a single test request to keep the server active
             test_question = "What are your technical skills?"
             
-            # Send request to self
-            response = requests.post(
-                'https://ai-assistent-chatboot.onrender.com/ask',
-                json={'question': test_question},
-                headers={'Content-Type': 'application/json'},
-                timeout=30
-            )
+            # Try multiple times with increasing timeout
+            max_retries = 3
+            retry_delays = [5, 10, 15]  # seconds between retries
             
-            if response.status_code == 200:
-                print(f"✅ Periodic request sent successfully at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                print(f"   Question: {test_question}")
-                print(f"   Status: {response.json().get('status', 'unknown')}")
-            else:
-                print(f"❌ Periodic request failed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                print(f"   Status Code: {response.status_code}")
+            for attempt in range(max_retries):
+                try:
+                    # Try external URL first
+                    response = requests.post(
+                        'https://ai-assistent-chatboot.onrender.com/ask',
+                        json={'question': test_question},
+                        headers={'Content-Type': 'application/json'},
+                        timeout=60  # Increased timeout to 60 seconds
+                    )
+                    
+                    if response.status_code == 200:
+                        print(f"✅ Periodic request sent successfully at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                        print(f"   Question: {test_question}")
+                        print(f"   Status: {response.json().get('status', 'unknown')}")
+                        print(f"   Attempt: {attempt + 1}/{max_retries}")
+                        break  # Success, exit retry loop
+                    else:
+                        print(f"⚠️ Periodic request failed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                        print(f"   Status Code: {response.status_code}")
+                        print(f"   Attempt: {attempt + 1}/{max_retries}")
+                        
+                except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                    print(f"🔌 External request failed on attempt {attempt + 1}/{max_retries} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                    print(f"   Error: {str(e)}")
+                    
+                    # Try local endpoint as fallback
+                    try:
+                        print("   Trying local endpoint as fallback...")
+                        local_response = requests.post(
+                            'http://localhost:5000/ask',
+                            json={'question': test_question},
+                            headers={'Content-Type': 'application/json'},
+                            timeout=30
+                        )
+                        
+                        if local_response.status_code == 200:
+                            print(f"✅ Local fallback request successful")
+                            print(f"   Status: {local_response.json().get('status', 'unknown')}")
+                            break  # Success with local fallback
+                        else:
+                            print(f"⚠️ Local fallback also failed with status: {local_response.status_code}")
+                            
+                    except Exception as local_error:
+                        print(f"❌ Local fallback also failed: {str(local_error)}")
+                    
+                    if attempt < max_retries - 1:
+                        print(f"   Retrying in {retry_delays[attempt]} seconds...")
+                        time.sleep(retry_delays[attempt])
+                    else:
+                        print("   Max retries reached, skipping this periodic request")
+                        
+                except Exception as e:
+                    print(f"❌ Unexpected error on attempt {attempt + 1}/{max_retries} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: {str(e)}")
+                    if attempt < max_retries - 1:
+                        print(f"   Retrying in {retry_delays[attempt]} seconds...")
+                        time.sleep(retry_delays[attempt])
+                    else:
+                        print("   Max retries reached, skipping this periodic request")
                 
         except Exception as e:
-            print(f"❌ Error in periodic request at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: {str(e)}")
+            print(f"❌ Critical error in periodic request at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: {str(e)}")
+            print("   Will continue with next periodic request cycle")
 
 def auto_restart_monitor():
     """Monitor server uptime and trigger restart every 14 minutes."""
