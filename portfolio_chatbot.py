@@ -306,7 +306,72 @@ Answer:
             result = self.chain.run({"user_input": question})
             return result.strip()
         except Exception as e:
-            return f"Sorry, I encountered an error: {str(e)}"
+            error_str = str(e).lower()
+            
+            # Handle rate limit errors gracefully
+            if 'rate limit' in error_str or '429' in error_str or 'tpd' in error_str:
+                return """**Service Temporarily Unavailable**
+
+I'm currently experiencing high demand and need a moment to process your request. 
+
+**What you can do**:
+• Try again in a few minutes
+• Ask me about Abhishek's background, projects, or skills
+• Check back later when the service is less busy
+
+**Available Information** (even during high traffic):
+• Abhishek's educational background and achievements
+• His 9 diverse projects in web, mobile, and ML/AI
+• Technical skills and programming languages
+• Career advice and opportunities
+• Contact information and professional networking
+
+**Quick Facts About Abhishek**:
+• Final year computer science student (8.26 CGPA)
+• 9 projects across web, mobile, and machine learning
+• Expertise in MERN stack, React Native, and Python
+• Passionate about solving real-world problems
+
+Please try again in a moment, or feel free to ask about any of these topics!"""
+            
+            # Handle other API-related errors
+            elif 'api' in error_str or 'key' in error_str or 'authentication' in error_str:
+                return """**Service Configuration Issue**
+
+I'm having trouble connecting to my knowledge base right now.
+
+**Available Information**:
+• Abhishek's educational background and projects
+• Technical skills and programming expertise
+• Career guidance and opportunities
+• Contact and networking information
+
+**Quick Overview**:
+• Final year CS student with strong academic record
+• 9 diverse projects demonstrating full-stack to ML skills
+• Expertise in React, Node.js, Python, and mobile development
+• Seeking opportunities in forward-thinking organizations
+
+Please try again later or contact Abhishek directly through his portfolio website."""
+            
+            # Handle general errors
+            else:
+                return """**Temporary Service Issue**
+
+I'm experiencing a technical difficulty right now.
+
+**What I can tell you about Abhishek**:
+• Final year computer science student with excellent academic record
+• 9 diverse projects in web, mobile, and machine learning
+• Strong expertise in full-stack development and Python
+• Passionate about innovation and problem-solving
+
+**Contact Information**:
+• Portfolio: https://www.abhishekambi.info/
+• Email: abhishekambi2003@gmail.com
+• LinkedIn: linkedin.com/in/abhishekambi2003
+
+Please try again in a few minutes, or reach out to Abhishek directly for immediate assistance."""
     
     def get_project_info(self, project_name: str) -> str:
         """

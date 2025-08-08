@@ -1,0 +1,13 @@
+# Core Flask and Web Framework
+Flask==2.3.3
+Flask-CORS==4.0.0
+Werkzeug==2.3.7
+
+# Environment and Configuration
+python-dotenv==1.0.0
+
+# HTTP Requests (for periodic requests and monitoring)
+requests==2.31.0
+
+# Production Server (Optional - for deployment)
+gunicorn==21.2.0

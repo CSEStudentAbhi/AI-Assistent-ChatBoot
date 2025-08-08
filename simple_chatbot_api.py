@@ -409,7 +409,8 @@ fallback_chatbot = FallbackChatbot()
 # Global variables for auto-restart and periodic requests
 auto_restart_enabled = True
 periodic_requests_enabled = True
-restart_interval = 180  # 3 minutes in seconds
+restart_interval = 840  # 14 minutes in seconds
+periodic_request_interval = 1080  # 18 minutes in seconds
 last_restart_time = time.time()
 server_start_time = time.time()
 
@@ -595,28 +596,17 @@ def method_not_allowed(error):
     }), 405
 
 def send_periodic_request():
-    """Send a periodic POST request to /ask endpoint every 3 minutes."""
+    """Send a periodic POST request to /ask endpoint every 18 minutes."""
     while periodic_requests_enabled:
         try:
-            # Wait for 3 minutes
-            time.sleep(restart_interval)
+            # Wait for 18 minutes
+            time.sleep(periodic_request_interval)
             
             if not periodic_requests_enabled:
                 break
                 
-            # Send a test request to keep the server active
-            test_questions = [
-                "What are your technical skills?",
-                "Tell me about your projects",
-                "What is your background?",
-                "How can I contact you?",
-                "Give me career advice"
-            ]
-            
-            # Rotate through different questions
-            current_time = int(time.time())
-            question_index = (current_time // restart_interval) % len(test_questions)
-            test_question = test_questions[question_index]
+            # Send a single test request to keep the server active
+            test_question = "What are your technical skills?"
             
             # Send request to self
             response = requests.post(
@@ -638,7 +628,7 @@ def send_periodic_request():
             print(f"❌ Error in periodic request at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}: {str(e)}")
 
 def auto_restart_monitor():
-    """Monitor server uptime and trigger restart every 3 minutes."""
+    """Monitor server uptime and trigger restart every 14 minutes."""
     global last_restart_time, server_start_time
     
     while auto_restart_enabled:
@@ -646,7 +636,7 @@ def auto_restart_monitor():
             current_time = time.time()
             time_since_last_restart = current_time - last_restart_time
             
-            # Check if it's time to restart (every 3 minutes)
+            # Check if it's time to restart (every 14 minutes)
             if time_since_last_restart >= restart_interval:
                 print(f"🔄 Auto-restart triggered at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                 print(f"   Server uptime: {int(time_since_last_restart)} seconds")
@@ -695,12 +685,12 @@ def start_background_threads():
     if auto_restart_enabled:
         restart_thread = threading.Thread(target=auto_restart_monitor, daemon=True)
         restart_thread.start()
-        print("🔄 Auto-restart monitor started (every 3 minutes)")
+        print("🔄 Auto-restart monitor started (every 14 minutes)")
     
     if periodic_requests_enabled:
         periodic_thread = threading.Thread(target=send_periodic_request, daemon=True)
         periodic_thread.start()
-        print("📡 Periodic request sender started (every 3 minutes)")
+        print("📡 Periodic request sender started (every 18 minutes)")
     
     print("✅ Background threads initialized")
 
@@ -708,8 +698,8 @@ if __name__ == '__main__':
     print("🚀 Starting Simple Portfolio Chatbot API...")
     print("📱 API will be available at: https://ai-assistent-chatboot.onrender.com")
     print("❓ Send POST requests to /ask with your questions")
-    print("🔄 Auto-restart enabled (every 3 minutes)")
-    print("📡 Periodic requests enabled (every 3 minutes)")
+    print("🔄 Auto-restart enabled (every 14 minutes)")
+    print("📡 Periodic requests enabled (every 18 minutes)")
     print("🛑 Press Ctrl+C to stop the server")
     
     # Set up signal handlers for graceful shutdown
